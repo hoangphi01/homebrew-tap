@@ -1,0 +1,36 @@
+name: bump
+
+# Follows Fotollection's releases: every six hours (and by hand), when the latest release is
+# newer than the cask, takes its version and the .dmg's checksum from the release's
+# SHA256SUMS.txt and commits them. No secret: the workflow writes only to this repository.
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=$(gh api repos/hoangphi01/fotollection/releases/latest --jq .tag_name)
+          new=${tag#v}
+          old=$(sed -n 's/^  version "\(.*\)"/\1/p' Casks/fotollection.rb)
+          if [ "$new" = "$old" ]; then echo "up to date ($old)"; exit 0; fi
+          gh release download "$tag" --repo hoangphi01/fotollection --pattern SHA256SUMS.txt
+          sha=$(awk -v f="Fotollection_${new}_universal.dmg" '$2 == f {print $1}' SHA256SUMS.txt)
+          [ -n "$sha" ] || { echo "no checksum for the .dmg of $tag"; exit 1; }
+          sed -i "s/^  version \".*\"/  version \"$new\"/; s/^  sha256 \".*\"/  sha256 \"$sha\"/" Casks/fotollection.rb
+          rm SHA256SUMS.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "fotollection $new"
+          git push
