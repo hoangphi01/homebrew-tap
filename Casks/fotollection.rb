@@ -1,6 +1,6 @@
 cask "fotollection" do
-  version "0.14.3"
-  sha256 "e9f38f6fa5cfe317003ea6a7f8dd3582111c944ad501229814dd1a27e315f5c6"
+  version "0.14.4"
+  sha256 "fb58dcd4255e7ce2bf611e7f08fca8452a432f894202e4069ac85d8b36996014"
 
   url "https://github.com/hoangphi01/fotollection/releases/download/v#{version}/Fotollection_#{version}_universal.dmg",
       verified: "github.com/hoangphi01/fotollection/"
